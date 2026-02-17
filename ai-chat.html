@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 干货解读 - 求职导师</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #F8FAFC;
+      color: #1E293B;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 0 40px rgba(0,0,0,0.1);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      background: white;
+      border-bottom: 1px solid #E2E8F0;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: none;
+      background: #F1F5F9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #E2E8F0;
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+      color: #64748B;
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    .header-title h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .header-title p {
+      font-size: 13px;
+      color: #64748B;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-user {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .message-user .message-content {
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      color: white;
+      border-radius: 20px 20px 4px 20px;
+      padding: 12px 18px;
+      max-width: 80%;
+    }
+
+    .message-ai {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .message-ai .message-content {
+      background: #F1F5F9;
+      color: #1E293B;
+      border-radius: 20px 20px 20px 4px;
+      padding: 16px 20px;
+      max-width: 85%;
+      line-height: 1.8;
+    }
+
+    .message-ai .message-content h3 {
+      color: #2563EB;
+      margin: 16px 0 8px 0;
+      font-size: 16px;
+    }
+
+    .message-ai .message-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .message-ai .message-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .message-ai .message-content li {
+      margin: 6px 0;
+    }
+
+    .message-ai .message-content strong {
+      color: #059669;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: #F1F5F9;
+      border-radius: 20px 20px 20px 4px;
+      width: fit-content;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: #94A3B8;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* 原始内容卡片 */
+    .source-card {
+      background: linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%);
+      border: 1px solid #C7D2FE;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .source-card .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 8px;
+    }
+
+    .source-card .tag.hot { background: #FEE2E2; color: #DC2626; }
+    .source-card .tag.new { background: #DBEAFE; color: #2563EB; }
+    .source-card .tag.default { background: #D1FAE5; color: #059669; }
+
+    .source-card .category {
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    .source-card h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1E293B;
+      margin: 8px 0;
+    }
+
+    .source-card p {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    /* 输入区域 */
+    .chat-input {
+      padding: 16px 24px;
+      background: white;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #E2E8F0;
+      border-radius: 24px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input input:focus {
+      border-color: #2563EB;
+    }
+
+    .chat-input button {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .chat-input button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .chat-input button:disabled {
+      background: #94A3B8;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="header-title">
+        <h1>🤖 AI 干货解读</h1>
+        <p>深度分析面试技巧，助你快速掌握</p>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <!-- 消息将在这里动态添加 -->
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="输入你的问题，继续探讨..." onkeypress="handleKeyPress(event)">
+      <button id="sendBtn" onclick="sendMessage()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // API 配置 - 使用当前 origin（前端和 API 在同一端口）
+    const API_BASE = window.location.origin;
+    
+    console.log('Current URL:', window.location.href);
+    console.log('API_BASE:', API_BASE);
+    
+    // 获取 URL 参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const tipData = {
+      tag: urlParams.get('tag') || '干货',
+      category: urlParams.get('category') || '',
+      title: urlParams.get('title') || '',
+      content: urlParams.get('content') || ''
+    };
+
+    // 对话历史
+    let conversationHistory = [];
+
+    // 返回首页
+    function goBack() {
+      window.location.href = '/';
+    }
+
+    // 初始化 - 自动发送分析请求
+    async function init() {
+      if (!tipData.title || !tipData.content) {
+        document.getElementById('chatMessages').innerHTML = `
+          <div class="message message-ai">
+            <div class="message-content">
+              <p>未找到要分析的内容，请从首页点击干货卡片进入。</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 显示原始内容
+      const tagClass = tipData.tag === '热门' ? 'hot' : (tipData.tag === '新' ? 'new' : 'default');
+      const sourceHtml = `
+        <div class="source-card">
+          <span class="tag ${tagClass}">${tipData.tag}</span>
+          <span class="category">${tipData.category}</span>
+          <h4>${tipData.title}</h4>
+          <p>${tipData.content}</p>
+        </div>
+      `;
+
+      // 显示用户问题
+      const userMessage = `请帮我详细解读这个面试技巧：「${tipData.title}」\n\n核心内容：${tipData.content}`;
+      conversationHistory.push({ role: 'user', content: userMessage });
+
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="message message-user">
+          <div class="message-content">${sourceHtml}</div>
+        </div>
+        <div class="message message-ai">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+
+      // 调用 AI 分析
+      await callAI();
+    }
+
+    // 调用 AI
+    async function callAI() {
+      try {
+        console.log('Calling API:', `${API_BASE}/api/analyze`);
+        
+        const response = await fetch(`${API_BASE}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: conversationHistory,
+            context: tipData
+          })
+        });
+
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API 请求失败: ${response.status} - ${errorText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let aiContent = '';
+
+        // 移除加载动画
+        const messagesContainer = document.getElementById('chatMessages');
+        const lastMessage = messagesContainer.lastElementChild;
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          aiContent += chunk;
+
+          // 更新显示
+          lastMessage.querySelector('.typing-indicator')?.remove();
+          if (!lastMessage.querySelector('.message-content')) {
+            lastMessage.innerHTML = `<div class="message-content">${formatContent(aiContent)}</div>`;
+          } else {
+            lastMessage.querySelector('.message-content').innerHTML = formatContent(aiContent);
+          }
+          
+          // 滚动到底部
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 保存到历史
+        conversationHistory.push({ role: 'assistant', content: aiContent });
+
+      } catch (error) {
+        console.error('AI 调用失败:', error);
+        const lastMessage = document.getElementById('chatMessages').lastElementChild;
+        lastMessage.innerHTML = `
+          <div class="message-content">
+            <p>抱歉，AI 分析服务暂时不可用。请稍后重试。</p>
+            <p style="color: #64748B; font-size: 12px; margin-top: 8px;">错误信息：${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // 发送消息
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      // 禁用发送按钮
+      document.getElementById('sendBtn').disabled = true;
+      input.value = '';
+
+      // 显示用户消息
+      const messagesContainer = document.getElementById('chatMessages');
+      messagesContainer.innerHTML += `
+        <div class="message message-user">
+          <div class="message-content">${escapeHtml(message)}</div>
+        </div>
+        <div class="message message-ai">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      // 添加到历史
+      conversationHistory.push({ role: 'user', content: message });
+
+      // 调用 AI
+      await callAI();
+
+      // 恢复发送按钮
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    // 处理回车键
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    // 格式化内容
+    function formatContent(content) {
+      // 简单的 Markdown 转换
+      let html = escapeHtml(content);
+      
+      // 标题
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      
+      // 列表
+      html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+      html = html.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+      
+      // 换行
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      
+      // 包装列表
+      html = html.replace(/(<li>.*<\/li>)+/g, '<ul>$&</ul>');
+      
+      return `<p>${html}</p>`;
+    }
+
+    // HTML 转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>求职导师 - AI面试助手平台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #F8FAFC;
+      color: #1E293B;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* 左侧导航栏 */
+    .sidebar {
+      width: 280px;
+      background: #FFFFFF;
+      border-right: 1px solid #E2E8F0;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1E293B;
+    }
+
+    .sidebar-desc {
+      font-size: 12px;
+      color: #64748B;
+      line-height: 1.5;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: #F1F5F9;
+    }
+
+    .nav-item.active {
+      background: #EFF6FF;
+      color: #2563EB;
+    }
+
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .nav-item.active .nav-icon {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .nav-item:not(.active) .nav-icon {
+      background: #F1F5F9;
+    }
+
+    .nav-text {
+      flex: 1;
+    }
+
+    .nav-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .nav-desc {
+      font-size: 12px;
+      color: #64748B;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 右侧主区域 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 欢迎页面 */
+    .welcome-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .welcome-page.hidden {
+      display: none;
+    }
+
+    .welcome-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.3);
+      font-size: 48px;
+    }
+
+    .welcome-title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1E293B;
+    }
+
+    .welcome-desc {
+      font-size: 16px;
+      color: #64748B;
+      max-width: 500px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* Chat 容器 */
+    .chat-container {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      background: white;
+    }
+
+    .chat-container.active {
+      display: flex;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      background: white;
+      border-bottom: 1px solid #E2E8F0;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: #F1F5F9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #E2E8F0;
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+      color: #64748B;
+    }
+
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .chat-header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .chat-header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .chat-header-desc {
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    .iframe-container {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 加载动画 */
+    .loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      z-index: 10;
+    }
+
+    .loading.hidden {
+      display: none;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #E2E8F0;
+      border-top-color: #2563EB;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      color: #64748B;
+      font-size: 14px;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    /* 干货区域样式 */
+    .tips-section {
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 32px;
+    }
+
+    .tips-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1E293B;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .tip-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #E2E8F0;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+
+    .tip-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
+      border-color: #2563EB;
+    }
+
+    .tip-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tip-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tip-tag.hot {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    .tip-tag.new {
+      background: #DBEAFE;
+      color: #2563EB;
+    }
+
+    .tip-tag:not(.hot):not(.new) {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .tip-category {
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    .tip-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1E293B;
+      margin-bottom: 8px;
+    }
+
+    .tip-content {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .tip-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94A3B8;
+    }
+
+    /* 面试问题区域样式 */
+    .questions-section {
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .questions-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1E293B;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .questions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .question-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: #F8FAFC;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .question-item:hover {
+      background: #EFF6FF;
+    }
+
+    .question-rank {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2563EB;
+      min-width: 28px;
+    }
+
+    .question-text {
+      flex: 1;
+      font-size: 14px;
+      color: #1E293B;
+      font-weight: 500;
+    }
+
+    .question-freq {
+      font-size: 12px;
+      color: #64748B;
+      background: #F1F5F9;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .questions-hint {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #64748B;
+      text-align: center;
+    }
+
+    /* 加载骨架屏 */
+    .loading-skeleton {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F1F5F9;
+      border: 1px dashed #E2E8F0;
+    }
+
+    .loading-skeleton .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon">✨</div>
+          <span class="logo-text">求职导师</span>
+        </div>
+        <p class="sidebar-desc">点击下方选项卡进入智能体进行模拟练习</p>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item" data-index="0" onclick="switchBot(this, 0)">
+          <div class="nav-icon">🎯</div>
+          <div class="nav-text">
+            <div class="nav-title">模拟面试官</div>
+            <div class="nav-desc">模拟真实面试场景</div>
+          </div>
+        </button>
+        
+        <button class="nav-item" data-index="1" onclick="switchBot(this, 1)">
+          <div class="nav-icon">📊</div>
+          <div class="nav-text">
+            <div class="nav-title">复盘导师</div>
+            <div class="nav-desc">深度分析面试表现</div>
+          </div>
+        </button>
+        
+        <button class="nav-item" data-index="2" onclick="switchBot(this, 2)">
+          <div class="nav-icon">💡</div>
+          <div class="nav-text">
+            <div class="nav-title">行业案例拆解</div>
+            <div class="nav-desc">拆解行业真实案例</div>
+          </div>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- 右侧主区域 -->
+    <main class="main-content">
+      <!-- 欢迎页面 -->
+      <div class="welcome-page" id="welcomePage">
+        <div class="welcome-icon">✨</div>
+        <h1 class="welcome-title">欢迎使用求职导师</h1>
+        <p class="welcome-desc">AI 面试助手平台，精选面试干货与求职技巧，助你从容应对每一次面试挑战</p>
+        
+        <!-- 今日干货区域 -->
+        <div class="tips-section">
+          <h3 class="tips-title">📚 今日面试干货 <span id="todayDate" style="font-size: 12px; color: #64748B; font-weight: 400;"></span></h3>
+          <div class="tips-grid" id="tipsGrid">
+            <!-- 动态加载 -->
+            <div class="tip-card loading-skeleton" style="height: 160px;">
+              <div class="loading-spinner"></div>
+            </div>
+            <div class="tip-card loading-skeleton" style="height: 160px;">
+              <div class="loading-spinner"></div>
+            </div>
+            <div class="tip-card loading-skeleton" style="height: 160px;">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 高频面试题区域 -->
+        <div class="questions-section">
+          <h3 class="questions-title">🎯 高频面试问题 TOP 5</h3>
+          <div class="questions-list" id="questionsList">
+            <!-- 动态加载 -->
+            <div class="question-item loading-skeleton" style="height: 48px;">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+          <p class="questions-hint">💡 点击左侧"模拟面试官"开始实战练习</p>
+        </div>
+      </div>
+
+      <!-- Chat 容器 -->
+      <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+          <button class="back-btn" onclick="goBack()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div class="chat-header-info">
+            <div class="chat-header-icon" id="chatHeaderIcon">🎯</div>
+            <div>
+              <div class="chat-header-title" id="chatHeaderTitle">模拟面试官</div>
+              <div class="chat-header-desc" id="chatHeaderDesc">模拟真实面试场景，提供即时反馈</div>
+            </div>
+          </div>
+        </div>
+        <div class="iframe-container" style="position: relative;">
+          <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">正在加载智能体...</div>
+          </div>
+          <iframe id="botIframe" src="" width="100%" height="100%" frameborder="0" onload="onIframeLoad()"></iframe>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://br-handy-lynx-9086283c.supabase2.aidap-global.cn-beijing.volces.com';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzNTE1MTA3NTMsInJvbGUiOiJhbm9uIn0.ODDduCUBJt9ksTFoG7cWVZ7Pn6vLoRgeZwH3nlVjJgk';
+    
+    // 直接使用 fetch 调用 Supabase REST API
+    async function supabaseFetch(table, options = {}) {
+      const params = new URLSearchParams();
+      if (options.select) params.append('select', options.select);
+      if (options.filter) {
+        Object.entries(options.filter).forEach(([key, value]) => {
+          params.append(key, `eq.${value}`);
+        });
+      }
+      if (options.order) params.append('order', `${options.order.column}.${options.order.ascending ? 'asc' : 'desc'}`);
+      if (options.limit) params.append('limit', options.limit);
+      
+      const url = `${SUPABASE_URL}/rest/v1/${table}?${params.toString()}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Supabase error: ${response.status}`);
+      }
+      
+      return response.json();
+    }
+
+    // 智能体配置
+    const bots = [
+      {
+        id: '7606673064772091930',
+        title: '模拟面试官',
+        description: '模拟真实面试场景，提供即时反馈，帮助练习面试技巧',
+        icon: '🎯',
+        color: '#2563EB',
+        url: 'https://www.coze.cn/store/agent/7606673064772091930?bot_id=true'
+      },
+      {
+        id: '7607141289817735211',
+        title: '复盘导师',
+        description: '深度分析面试表现，识别问题并提供个性化改进建议',
+        icon: '📊',
+        color: '#059669',
+        url: 'https://www.coze.cn/store/agent/7607141289817735211?bot_id=true'
+      },
+      {
+        id: '7607480544884293647',
+        title: '行业案例拆解',
+        description: '拆解行业真实案例，帮助理解业务逻辑和行业趋势',
+        icon: '💡',
+        color: '#7C3AED',
+        url: 'https://www.coze.cn/store/agent/7607480544884293647?bot_id=true&bid=6j4qate1c0g18'
+      }
+    ];
+
+    let currentBotIndex = -1;
+
+    // 切换智能体
+    function switchBot(element, index) {
+      loadBot(index);
+    }
+
+    // 通过索引切换智能体
+    function switchBotByIndex(index) {
+      loadBot(index);
+    }
+
+    // 加载智能体
+    function loadBot(index) {
+      if (currentBotIndex === index) return;
+      
+      const bot = bots[index];
+      currentBotIndex = index;
+
+      // 更新导航栏选中状态
+      document.querySelectorAll('.nav-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+
+      // 更新聊天头部信息
+      document.getElementById('chatHeaderIcon').textContent = bot.icon;
+      document.getElementById('chatHeaderIcon').style.background = bot.color + '15';
+      document.getElementById('chatHeaderTitle').textContent = bot.title;
+      document.getElementById('chatHeaderDesc').textContent = bot.description;
+
+      // 显示聊天容器
+      document.getElementById('welcomePage').classList.add('hidden');
+      document.getElementById('chatContainer').classList.add('active');
+      
+      // 显示加载动画
+      document.getElementById('loading').classList.remove('hidden');
+
+      // 设置 iframe src
+      document.getElementById('botIframe').src = bot.url;
+    }
+
+    // iframe 加载完成
+    function onIframeLoad() {
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    // 返回欢迎页
+    function goBack() {
+      currentBotIndex = -1;
+      
+      // 清除导航栏选中状态
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      // 显示欢迎页
+      document.getElementById('welcomePage').classList.remove('hidden');
+      document.getElementById('chatContainer').classList.remove('active');
+
+      // 清空 iframe
+      document.getElementById('botIframe').src = '';
+    }
+
+    // 加载首页数据 - 调用后端 API
+    async function loadHomeData() {
+      try {
+        // 调用后端 API 获取首页数据（已处理日期轮换逻辑）
+        const response = await fetch('/api/home');
+        const data = await response.json();
+        
+        // 更新日期显示
+        document.getElementById('todayDate').textContent = `(${data.today_date})`;
+        
+        // 渲染干货内容（后端已返回今日3条干货）
+        renderTips(data.tips);
+        
+        // 渲染高频问题
+        renderQuestions(data.questions);
+        
+      } catch (error) {
+        console.error('加载首页数据失败:', error);
+        document.getElementById('tipsGrid').innerHTML = '<p style="color: #64748B; text-align: center; grid-column: 1/-1;">加载失败，请刷新页面重试</p>';
+        document.getElementById('questionsList').innerHTML = '<p style="color: #64748B; text-align: center;">加载失败，请刷新页面重试</p>';
+      }
+    }
+
+    // 渲染干货内容
+    function renderTips(tips) {
+      const container = document.getElementById('tipsGrid');
+      
+      if (!tips || tips.length === 0) {
+        container.innerHTML = '<p style="color: #64748B; text-align: center; grid-column: 1/-1;">暂无内容</p>';
+        return;
+      }
+      
+      container.innerHTML = tips.map(tip => {
+        // 根据标签选择样式
+        let tagClass = '';
+        if (tip.tag === '热门') tagClass = 'hot';
+        else if (tip.tag === '新') tagClass = 'new';
+        
+        // 格式化阅读量
+        const viewsStr = tip.views >= 1000 ? (tip.views / 1000).toFixed(1) + 'k' : tip.views;
+        
+        // 构建 AI 解读链接
+        const aiChatUrl = `ai-chat.html?tag=${encodeURIComponent(tip.tag)}&category=${encodeURIComponent(tip.category)}&title=${encodeURIComponent(tip.title)}&content=${encodeURIComponent(tip.content)}`;
+        
+        return `
+          <div class="tip-card" onclick="openAIChat('${aiChatUrl.replace(/'/g, "\\'")}')">
+            <div class="tip-header">
+              <span class="tip-tag ${tagClass}">${tip.tag}</span>
+              <span class="tip-category">${tip.category}</span>
+            </div>
+            <h4 class="tip-title">${tip.title}</h4>
+            <p class="tip-content">${tip.content}</p>
+            <div class="tip-footer">
+              <span class="tip-views">👁 ${viewsStr} 阅读</span>
+              <span class="tip-time">${tip.read_time}阅读</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 打开 AI 解读页面
+    function openAIChat(url) {
+      window.location.href = url;
+    }
+
+    // 渲染高频问题
+    function renderQuestions(questions) {
+      const container = document.getElementById('questionsList');
+      
+      if (!questions || questions.length === 0) {
+        container.innerHTML = '<p style="color: #64748B; text-align: center;">暂无内容</p>';
+        return;
+      }
+      
+      container.innerHTML = questions.map(q => {
+        const rankStr = q.rank.toString().padStart(2, '0');
+        return `
+          <div class="question-item">
+            <span class="question-rank">${rankStr}</span>
+            <span class="question-text">${q.question}</span>
+            <span class="question-freq">出现频率 ${q.frequency}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 增加阅读量 - 使用 fetch 调用 Supabase
+    async function incrementView(id, type) {
+      try {
+        if (type === 'tip') {
+          // 先获取当前阅读量
+          const data = await supabaseFetch('interview_tips', {
+            select: 'views',
+            filter: { id: id }
+          });
+          
+          if (data && data.length > 0) {
+            const newViews = (data[0].views || 0) + 1;
+            // 使用 PATCH 更新
+            await fetch(`${SUPABASE_URL}/rest/v1/interview_tips?id=eq.${id}`, {
+              method: 'PATCH',
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({ views: newViews })
+            });
+          }
+        }
+      } catch (error) {
+        console.error('更新阅读量失败:', error);
+      }
+    }
+
+    // 页面加载完成后获取数据
+    document.addEventListener('DOMContentLoaded', loadHomeData);
+  </script>
+</body>
+</html>

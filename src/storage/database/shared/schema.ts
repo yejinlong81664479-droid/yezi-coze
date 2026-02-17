@@ -1,0 +1,23 @@
+import { pgTable, index, varchar, text, integer, jsonb, timestamp, serial } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+
+
+
+export const generations = pgTable("generations", {
+	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	type: varchar({ length: 20 }).notNull(),
+	prompt: text().notNull(),
+	style: text(),
+	pageCount: integer("page_count").default(1),
+	imageUrls: jsonb("image_urls"),
+	imageKeys: jsonb("image_keys"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("generations_created_at_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	index("generations_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
+]);
+
+export const healthCheck = pgTable("health_check", {
+	id: serial().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+});
