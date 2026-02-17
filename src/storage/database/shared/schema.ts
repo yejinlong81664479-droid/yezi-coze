@@ -1,13 +1,12 @@
-import { pgTable, index, varchar, text, integer, jsonb, timestamp, serial } from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
-
-
+import { pgTable, index, varchar, text, integer, jsonb, timestamp, serial } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const generations = pgTable("generations", {
-	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
-	type: varchar({ length: 20 }).notNull(),
-	prompt: text().notNull(),
-	style: text(),
+	id: varchar("id", { length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+	type: varchar("type", { length: 20 }).notNull(),
+	prompt: text("prompt").notNull(),
+	style: text("style"),
 	pageCount: integer("page_count").default(1),
 	imageUrls: jsonb("image_urls"),
 	imageKeys: jsonb("image_keys"),
@@ -18,6 +17,13 @@ export const generations = pgTable("generations", {
 ]);
 
 export const healthCheck = pgTable("health_check", {
-	id: serial().notNull(),
+	id: serial("id").notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 });
+
+// 👇👇👇 下面这几行是你原文件中缺失的，也是报错的原因 👇👇👇
+export const insertGenerationSchema = createInsertSchema(generations);
+export const selectGenerationSchema = createSelectSchema(generations);
+
+export type Generation = typeof generations.$inferSelect;
+export type InsertGeneration = typeof generations.$inferInsert;
